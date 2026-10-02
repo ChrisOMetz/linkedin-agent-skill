@@ -68,4 +68,10 @@ seconds. Then the accompanying **post text** - a carousel still needs 2-3
 lines above it, which is the actual hook in the feed. Run both through
 `/li-human`. Then build the PDF only if the user approves the copy.
 
-Nothing is uploaded to LinkedIn. The user posts the PDF themselves.
+**FeedHive cannot send this one.** LinkedIn's API does not support document
+posts, so FeedHive cannot publish the PDF, and every other LinkedIn post goes
+through FeedHive only. Do not post it any other way. Hand over the copy, the
+post text and the PDF, say plainly that the upload cannot go through FeedHive,
+and let the user decide: upload it themselves, or turn it into a text post via
+`/li-post` and `/li-publish`. Whether multiple images could work as a carousel
+substitute in FeedHive is untested.

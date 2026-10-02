@@ -67,12 +67,15 @@ length:    1,140 characters
 humanizer: 6 artefacts stripped, human score 84 PASS
 post at:   Tuesday 8:15am ET (from your plan)
 
-Reply "yes" to log it, or tell me what to change.
+Reply "draft" to park it in FeedHive, "schedule" to queue it for that time,
+or tell me what to change.
 ```
 
-**5. Never publish.** This skill produces text. The user posts it. On "yes",
-append the post to `~/.claude/linkedin/log.md` with the date, the hook used
-and the first line, so `/li-audit` has a history to work from later.
+**5. Hand off to FeedHive, and only FeedHive.** This skill produces text. All
+posting to LinkedIn goes through FeedHive via `/li-publish`, and only after the
+user answers "draft" or "schedule". A bare "yes" means draft. Never post by
+any other route. `/li-publish` logs the post to `~/.claude/linkedin/log.md`
+with the FeedHive post id so `/li-audit` has a history to work from later.
 
 ## Rules that make the difference
 
@@ -85,6 +88,8 @@ and the first line, so `/li-audit` has a history to work from later.
   categories someone follows.
 - **No links in the post body.** LinkedIn suppresses posts with outbound
   links. Put the link in the first comment and say so in the receipt.
+- **No @-mentions of people.** FeedHive's LinkedIn connection can only
+  mention companies. Write the name as plain text.
 - **Never fabricate.** No invented metrics, clients, revenue figures or
   outcomes under the user's name, even as a placeholder. If a number is
   needed and unknown, leave `{{your number}}` in the draft and flag it.
