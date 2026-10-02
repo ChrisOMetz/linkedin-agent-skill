@@ -91,4 +91,7 @@ Say "write Tuesday" and I will draft it.
 ```
 
 Write the plan to `~/.claude/linkedin/plan.md` so the other skills can read it.
-Nothing is scheduled or posted anywhere - this is a plan, and the user runs it.
+Nothing is scheduled or posted anywhere - this is a plan. When the user
+approves a drafted post, `/li-publish` puts it into FeedHive (the only route to
+LinkedIn) at the slot's time. FeedHive can also hold recurring plan slots; do
+not create or change them unless the user asks.

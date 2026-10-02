@@ -20,6 +20,11 @@ python3 detect.py draft.txt                    # score it, five checks
 python3 detect.py before.txt after.txt         # prove the delta
 ```
 
+The scripts live in this skill's base directory, not the working directory.
+Call them by absolute path (`python3 <base-dir>/humanize.py ...`) and keep
+draft files in a scratch location, not in the user's project. On Windows use
+`python` or `py -3` if `python3` is not on the PATH.
+
 Both read `slop.json`, which is the lexicon: 100+ stock words and phrases with
 plain-English replacements, 17 invisible character classes, 11 typographic
 substitutions, and 11 structural tells. It is meant to be edited. If the user

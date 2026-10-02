@@ -22,6 +22,11 @@ Ask for whichever the user has:
 - Or just the posts and their reaction counts, which is enough for a first
   pass.
 
+- Or, for posts published through FeedHive, pull the numbers directly: take
+  the FeedHive post ids from `log.md` and read their analytics via
+  `/li-publish` (`feedhive_analytics_post`). Metrics vary by platform and may
+  be `stale`; say so. Posts not published through FeedHive have no data there.
+
 Also read `~/.claude/linkedin/log.md` if it exists, since it records which
 hook formula each post used.
 

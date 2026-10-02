@@ -1,7 +1,8 @@
 # The LinkedIn agent skill
 
-Eleven Claude skills that run a LinkedIn account. Free, MIT, no signup, no API
-key, nothing to connect.
+Twelve Claude skills that run a LinkedIn account. Free, MIT, no signup. The
+eleven upstream skills need no API key and nothing to connect; the twelfth,
+`/li-publish`, needs a FeedHive account.
 
 One of them writes your posts off 21 hook formulas. One comments on other
 people's posts. One handles the replies under yours. One scores your profile
@@ -13,14 +14,24 @@ the em dashes, the slop vocabulary and the invisible watermark characters out
 of a draft, then scores what is left against a five-check detection panel
 before you ever see it.
 
-**Nothing gets posted until you say yes.** These skills write. You post.
+**Nothing gets posted until you say yes.** These skills write. In this fork,
+posting to LinkedIn goes through [FeedHive](https://feedhive.com) and nowhere
+else, via `/li-publish`, and only after you answer "draft" or "schedule". See
+[Posting through FeedHive](#posting-through-feedhive).
+
+> **Fork notice.** This is a fork of
+> [Jakeschincariol/linkedin-agent-skill](https://github.com/Jakeschincariol/linkedin-agent-skill)
+> (MIT, credit below). It adds a twelfth skill, `/li-publish`, and changes the
+> hand-off in `/li-post`, `/li-carousel`, `/li-plan` and `/li-audit` so that
+> LinkedIn posts go through FeedHive instead of copy-and-paste. `/li-human` got
+> a note on calling its scripts by absolute path. Everything else is upstream.
 
 ## Install
 
 Paste this into Claude:
 
 ```
-https://github.com/Jakeschincariol/linkedin-agent-skill
+https://github.com/ChrisOMetz/linkedin-agent-skill
 
 Install this skill, then confirm /li-post works.
 ```
@@ -28,14 +39,14 @@ Install this skill, then confirm /li-post works.
 Or do it yourself, in Claude Code:
 
 ```bash
-git clone https://github.com/Jakeschincariol/linkedin-agent-skill.git
+git clone https://github.com/ChrisOMetz/linkedin-agent-skill.git
 cp -r linkedin-agent-skill/skills/li-* ~/.claude/skills/
 ```
 
 Or as a plugin:
 
 ```
-/plugin marketplace add Jakeschincariol/linkedin-agent-skill
+/plugin marketplace add ChrisOMetz/linkedin-agent-skill
 /plugin install linkedin-agent
 ```
 
@@ -49,17 +60,18 @@ Then spend ten minutes on `templates/voice.md`. Copy it to
 into Claude and say "write my voice.md from these". Every skill reads that
 file. Skip it and everything comes out sounding like everyone else.
 
-## The eleven
+## The twelve
 
 | command | what it does |
 | --- | --- |
+| `/li-publish` | Sends an approved post to FeedHive as a draft or a scheduled post, verifies it landed, logs the FeedHive post id. The only route to LinkedIn in this fork. |
 | `/li-post` | One idea into a post. Three hook options from [21 formulas](skills/li-post/hooks.json), one full draft, humanized before you see it. |
 | `/li-comment` | Comments on other people's posts. Nine types, picked by what the post actually is. Never "Great post!". |
 | `/li-reply` | The thread under your own post. Sorts every comment into lead / substance / peer / support / noise, then writes in that order. |
 | `/li-profile` | Scores your profile against a [12-part rubric](skills/li-profile/rubric.json) out of 100, then rewrites in fix-first order. |
 | `/li-plan` | The week. What to post, when to post it, and the 10 people to engage with. Writes `~/.claude/linkedin/plan.md`. |
 | `/li-human` | The humanizer. Two scripts that actually run. See below. |
-| `/li-carousel` | Document posts. Slide-by-slide copy, the cover that earns the swipe, and the PDF to upload. |
+| `/li-carousel` | Document posts. Slide-by-slide copy, the cover that earns the swipe, and the PDF to upload. FeedHive cannot send PDFs, so this one stops at the PDF. |
 | `/li-repurpose` | One video, newsletter or transcript into a week of posts that each stand alone. |
 | `/li-dm` | The 200-character invite note, the first message, and the two follow-ups. Two. |
 | `/li-inbox` | Triages the inbox into lead / recruiter / peer / ask / spam, and tells you which tell gave the sequence away. |
@@ -128,15 +140,59 @@ After `humanize.py`, with the flagged structures still unrewritten:
 
 The last stretch to PASS is the part the script deliberately leaves to you.
 
+## Posting through FeedHive
+
+[FeedHive](https://feedhive.com) is a social media scheduler that publishes to
+LinkedIn through LinkedIn's sanctioned API. `/li-publish` is the only skill
+that writes to it, and the only route this fork uses to post. Browser
+automation and unofficial tools are off the table.
+
+**Connect it** by adding the FeedHive MCP server, with your API key from
+FeedHive Settings > Account (workspace key: Settings > Workspace):
+
+```bash
+claude mcp add --transport http FeedHive https://mcp.feedhive.com \
+  --header "Authorization: Bearer fh_YOUR_KEY"
+```
+
+The server exposes the whole FeedHive API as `feedhive_*` tools (posts,
+labels, media, plan slots, socials, analytics) plus one `trigger_<id>` tool per
+Workflow you built in FeedHive. It guards the risky calls itself: a post is a
+draft unless you pass `confirm_scheduling`, updates need `confirm_update`,
+deletes need `confirm`. Without MCP, `/li-publish` falls back to the official
+CLI (`npx @feedhive/cli`, key in `FEEDHIVE_API_KEY` or
+`~/.feedhive/agent-tools.env`). Never paste the key into chat or commit it.
+
+**The gate.** After `/li-post` shows a draft you answer **draft** (park it in
+FeedHive, nothing goes live; a bare "yes" means this) or **schedule** (queue it
+for the stated time). FeedHive has no publish-now call, so scheduling is the
+only way a post goes live. If your FeedHive workspace uses its approval
+workflow, API-created posts wait as "pending approval" until you approve them
+in the FeedHive app.
+
+**What FeedHive cannot do for LinkedIn**, per its docs, so these skills do not
+pretend otherwise:
+
+- no PDF / carousel posts (`/li-carousel` stops at the PDF)
+- no @-mentions of people, companies only
+- no LinkedIn groups
+- no comments or DMs, so `/li-comment`, `/li-reply`, `/li-dm` and `/li-inbox`
+  remain copy-and-paste
+- whether a FeedHive thread reply becomes a LinkedIn first comment is not
+  documented, so the skills do not rely on it
+
 ## The fine print, which is the honest part
 
-**These skills do not post to LinkedIn, and they should not.** There is no
-official API for posting to a personal profile without an approved partner
+**Posting is not done by browser automation, and it should not be.** There is
+no official API for posting to a personal profile without an approved partner
 app, and automating the site with a browser or a third-party tool violates
 [LinkedIn's User Agreement](https://www.linkedin.com/legal/user-agreement) and
-gets accounts restricted. So every skill here ends the same way: a copy-ready
-block, and you paste it. That is not a limitation bolted on afterwards, it is
-the design. It is also why the approval gate is real rather than a setting.
+gets accounts restricted. Upstream, every skill ended with a copy-ready block
+and you pasted it. In this fork, text posts go through FeedHive, which
+publishes through LinkedIn's API instead of automating the website, and
+everything FeedHive cannot send (documents, comments,
+DMs) is still a copy-ready block you paste yourself. The approval gate is real
+rather than a setting either way.
 
 **The five checks are local heuristics, not detector APIs.** They are modelled
 on the signals public detectors key on, and they run entirely on your machine.
@@ -159,6 +215,7 @@ your name. If a draft needs a number you have not given, it comes back with
 ## Files
 
 ```
+skills/li-publish/SKILL.md       the FeedHive hand-off: MCP first, pinned CLI fallback, draft/schedule gate
 skills/li-post/hooks.json        21 hook formulas: template, example, what it is for, how it gets ruined
 skills/li-human/slop.json        the lexicon: 113 terms, 17 invisible classes, 11 structural tells
 skills/li-human/humanize.py      the three cleaning passes
